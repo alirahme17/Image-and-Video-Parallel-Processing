@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Presentation: Parallel Image & Video Processing (with Code Explanations)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .slide {
+            display: none;
+            min-height: 80vh;
+        }
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+        .slide-container {
+            max-width: 1200px;
+            width: 90%;
+            margin: 2rem auto;
+            padding: 3rem;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        pre code {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+        .placeholder {
+            border: 2px dashed #cbd5e1; /* slate-300 */
+            background-color: #f1f5f9; /* slate-100 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b; /* slate-500 */
+            font-weight: 500;
+        }
+        .gemini-btn {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .gemini-btn:hover {
+            background-color: #4338ca; /* indigo-700 */
+        }
+        .gemini-btn:disabled {
+            background-color: #a5b4fc; /* indigo-300 */
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="presentation-container">
+        <!-- Slide 1: Title -->
+        <section class="slide active">
+            <div class="slide-container justify-center items-center text-center">
+                <h1 class="text-5xl font-bold text-slate-900">Parallel Image & Video Processing using Java</h1>
+                <div class="mt-12 text-lg text-slate-600">
+                    <p class="font-semibold">Ali Rahme 6425</p>
+                    <p class="font-semibold">Mostafa Kabalan 6183</p>
+                    <br>
+                    <p>Supervisor: Dr. Mohammed Aoude</p>
+                    <p>Parallel Programming</p>
+                    <p>11/07/2025</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: Agenda -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Agenda</h2>
+                <ol class="list-decimal list-inside space-y-3 text-xl text-slate-700">
+                    <li>Introduction & Motivation</li>
+                    <li>Project Objectives</li>
+                    <li>System Design & GUI</li>
+                    <li>Image Processing: Sequential & Parallel</li>
+                    <li>Code Deep Dive: Image Processing Logic</li>
+                    <li>Extending to Video Processing</li>
+                    <li>Code Deep Dive: Video Processing Logic</li>
+                    <li>Test Methodology & Environment</li>
+                    <li>Results & Performance Analysis</li>
+                    <li>Conclusion & Future Work</span></li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Slide 3: Introduction & Motivation -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Introduction & Motivation</h2>
+                <ul class="space-y-6 text-xl text-slate-700 list-disc list-outside ml-6">
+                    <li><span class="font-semibold">The Problem:</span> Processing large-scale media, like high-resolution images and videos, is computationally demanding.</li>
+                    <li><span class="font-semibold">The Bottleneck:</span> Traditional sequential algorithms process data pixel-by-pixel or frame-by-frame, failing to utilize the full power of modern multi-core processors.</li>
+                    <li><span class="font-semibold">The Opportunity:</span> By parallelizing the workload, we can distribute the processing across multiple CPU cores, drastically reducing execution time for both images and video streams.</li>
+                    <li class="mt-4 pt-4 border-t border-slate-200"><span class="font-semibold text-slate-900">This project investigates the effectiveness of different parallelization strategies in Java.</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 4: Project Objectives -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Project Objectives</h2>
+                <ol class="list-decimal list-outside ml-6 space-y-4 text-xl text-slate-700">
+                    <li>Develop a Java Swing GUI for loading and processing images and videos.</li>
+                    <li>Implement image filters using the <span class="font-semibold text-slate-800">Fork/Join framework</span> for parallelization.</li>
+                    <li>Implement video processing using a <span class="font-semibold text-slate-800">fixed thread pool (ExecutorService)</span> to handle individual frames in parallel.</li>
+                    <li>Systematically measure and compare the performance of sequential vs. parallel implementations for both media types.</li>
+                    <li>Analyze the scalability of the parallel solutions by varying the number of threads from 1 to 12.</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Slide 5: System GUI (Java Swing) -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">System GUI (Java Swing)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-grow">
+                    <div class="text-xl text-slate-700">
+                        <p class="mb-6">A user-friendly interface was built using Java Swing for ease of use and demonstration.</p>
+                        <h3 class="font-semibold text-2xl mb-4 text-slate-800">Key Components:</h3>
+                        <ul class="list-disc list-outside ml-6 space-y-3">
+                            <li><span class="font-semibold">File Loader:</span> Allows the user to select an image or video file.</li>
+                            <li><span class="font-semibold">Media Panels:</span> Displays the "Original" and "Processed" output side-by-side.</li>
+                            <li><span class="font-semibold">Control Panel:</span> Contains buttons to trigger processing and to choose between sequential and parallel modes.</li>
+                            <li><span class="font-semibold">Results Area:</span> Displays measured execution times and performance graphs.</li>
+                        </ul>
+                    </div>
+                    <div class="placeholder h-full min-h-[300px] md:min-h-0">
+                        <img src="gui_1.jpg"/>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Image Processing: Sequential Implementation -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-6 text-slate-900">Image Processing: Sequential Implementation</h2>
+                <p class="text-xl text-slate-700 mb-6">The baseline for image processing is a single `for` loop that iterates over a 1D array of pixels.</p>
+                <div class="bg-slate-900 rounded-lg p-4 flex-grow overflow-auto">
+                    <pre><code class="language-java text-white">// The core sequential loop for images
+for (int i = 0; i < width * height; i++) {
+    int pixel = originalPixels[i];
+    
+    // Extract color channels
+    int alpha = (pixel >> 24) & 0xff;
+    int red = (pixel >> 16) & 0xff;
+    int green = (pixel >> 8) & 0xff;
+    int blue = pixel & 0xff;
+
+    // Apply weighted average for a perceptually accurate grayscale
+    int avg = (int)(0.299 * red + 0.587 * green + 0.114 * blue);
+    
+    // Compose the new grayscale pixel
+    grayPixels[i] = (alpha << 24) | (avg << 16) | (avg << 8) | avg;
+}
+                    </code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Code Deep Dive: Sequential Image Loop -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Code Deep Dive: Sequential Image Loop</h2>
+                <ul class="space-y-5 text-xl text-slate-700 list-disc list-outside ml-6">
+                    <li><span class="font-semibold">Pixel Iteration:</span> The `for` loop iterates from the first pixel (`i = 0`) to the last (`width * height - 1`). This is the classic single-threaded approach.</li>
+                    <li><span class="font-semibold">Color Channel Extraction:</span> We use bitwise right-shift (`>>`) and AND (`&`) operations to isolate the 8-bit Alpha, Red, Green, and Blue values from the 32-bit integer representing the pixel.</li>
+                    <li><span class="font-semibold">Grayscale Conversion:</span> A weighted average formula (`0.299*R + 0.587*G + 0.114*B`) is used. These weights account for human eye sensitivity to different colors, producing a more natural-looking grayscale image.</li>
+                    <li><span class="font-semibold">Pixel Composition:</span> The new grayscale value (`avg`) is placed into all three color channels (R, G, and B), and combined with the original alpha channel using bitwise left-shift (`<<`) and OR (`|`) to form the final pixel value.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 8: Image Processing: Parallel with Fork/Join -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-6 text-slate-900">Image Processing: Parallel with Fork/Join</h2>
+                <p class="text-xl text-slate-700 mb-6">For images, we use a "Divide and Conquer" strategy. The `compute()` method in a `RecursiveAction` decides whether to process an image slice or split it further.</p>
+                <div class="bg-slate-900 rounded-lg p-4 flex-grow overflow-auto">
+                    <pre><code class="language-java text-white">@Override
+protected void compute() {
+    int rowsToProcess = endY - startY;
+
+    // BASE CASE: If the slice is small enough, process it directly
+    if (rowsToProcess <= threshold) {
+        // Apply filter to the assigned rows (startY to endY)
+        // ... loops for processing pixels in the slice ...
+    } 
+    // RECURSIVE STEP: If the slice is too large, split it
+    else {
+        int midY = startY + (rowsToProcess / 2);
+        // Fork into two new sub-tasks and wait for them to complete
+        invokeAll(
+            new CustomFilterTransformTask(..., startY, midY, ...),
+            new CustomFilterTransformTask(..., midY, endY, ...)
+        );
+    }
+}
+                    </code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: Code Deep Dive: Fork/Join `compute()` -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Code Deep Dive: Fork/Join `compute()`</h2>
+                <ul class="space-y-5 text-xl text-slate-700 list-disc list-outside ml-6">
+                    <li><span class="font-semibold">The Core Method:</span> `compute()` is the heart of any Fork/Join task. It contains the logic for both performing work and splitting it up.</li>
+                    <li><span class="font-semibold">Base Case:</span> The `if (rowsToProcess <= threshold)` check is crucial. It defines the smallest chunk of work that a thread will execute directly. If the task is small enough, the recursion stops, and the actual image processing occurs.</li>
+                    <li><span class="font-semibold">Recursive Step:</span> If the task is too large (the `else` block), it's split in half. A midpoint (`midY`) is calculated, and two new `CustomFilterTransformTask` objects are created, one for the top half and one for the bottom.</li>
+                    <li><span class="font-semibold">`invokeAll()`:</span> This powerful method schedules the two new sub-tasks for execution on the `ForkJoinPool` and waits for them to complete. The framework's work-stealing algorithm ensures that idle threads will pick up these new tasks, leading to efficient parallel execution.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 10: Extending to Video Processing -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Extending to Video Processing</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-xl text-slate-700">
+                    <div>
+                        <h3 class="font-semibold text-2xl mb-4 text-slate-800">A New Challenge</h3>
+                        <p>A video is fundamentally a sequence of images (frames). This structure presents a different kind of parallelization problem compared to a single, large image.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-2xl mb-4 text-slate-800">The Strategy</h3>
+                        <ul class="list-disc list-outside ml-6 space-y-3">
+                            <li>Each frame is an independent unit of work.</li>
+                            <li>We can process multiple frames concurrently, each in its own thread.</li>
+                            <li>This is a "data parallelism" or "task parallelism" problem, well-suited for a standard thread pool.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-8 p-6 bg-slate-100 rounded-lg">
+                     <h3 class="font-semibold text-2xl mb-4 text-slate-800">Technology Used: OpenCV</h3>
+                     <p class="text-xl text-slate-700">We use the <span class="font-semibold">OpenCV</span> (Open Source Computer Vision Library) for Java to handle video I/O operations—reading frames from an input file and writing processed frames to an output file.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Sequential Video Processing -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-6 text-slate-900">Sequential Video Processing</h2>
+                <p class="text-xl text-slate-700 mb-6">The sequential approach reads one frame, processes it, writes it, and then repeats until the video ends. The core logic is a simple `while` loop.</p>
+                <div class="bg-slate-900 rounded-lg p-4 flex-grow overflow-auto">
+                    <pre><code class="language-java text-white">public static void processVideoGrayscaleSequential(File inputFile, File outputFile) {
+    VideoCapture cap = new VideoCapture(inputFile.getAbsolutePath());
+    // ... setup VideoWriter ...
+    
+    Mat frame = new Mat();
+    int frameCount = 0;
+    
+    // Read frames one by one until the end of the video
+    while (cap.read(frame)) {
+        if (!frame.empty()) {
+            Mat grayFrame = new Mat();
+            // Convert the single frame to grayscale
+            Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
+            // Write the processed frame to the output file
+            writer.write(grayFrame);
+            frameCount++;
+        }
+    }
+    
+    System.out.println("Sequential processing completed. Processed " + frameCount + " frames.");
+    cap.release();
+    writer.release();
+}
+                    </code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 12: Code Deep Dive: Sequential Video Loop -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Code Deep Dive: Sequential Video Loop</h2>
+                <ul class="space-y-5 text-xl text-slate-700 list-disc list-outside ml-6">
+                    <li><span class="font-semibold">Video I/O Setup:</span> `VideoCapture` is initialized with the input file path to read the video. `VideoWriter` is set up to save the processed video.</li>
+                    <li><span class="font-semibold">The Main Loop:</span> The `while (cap.read(frame))` loop is the core of the process. In each iteration, it attempts to read one frame from the video into the `Mat` (Matrix) object. The loop continues as long as there are frames to read.</li>
+                    <li><span class="font-semibold">Frame Processing:</span> Inside the loop, `Imgproc.cvtColor` is used. This OpenCV function converts the color space of the frame from BGR (the default for OpenCV) to GRAY.</li>
+                    <li><span class="font-semibold">Writing and Cleanup:</span> The newly created `grayFrame` is written to the output file using `writer.write()`. After the loop finishes, `.release()` is called on both the capture and writer objects to free up resources.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 13: Parallel Video Processing -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-6 text-slate-900">Parallel Video Processing</h2>
+                <p class="text-xl text-slate-700 mb-6">We use an `ExecutorService` (a fixed thread pool) to process multiple frames at once. Each frame conversion is submitted as a separate task to the pool.</p>
+                <div class="bg-slate-900 rounded-lg p-4 flex-grow overflow-auto">
+                    <pre><code class="language-java text-white">public static void processVideoGrayscaleParallel(File inputFile, File outputFile, int numThreads) {
+    // ... setup VideoCapture and read all frames into a List<Mat> ...
+    
+    // Create a thread pool with a fixed number of threads
+    ExecutorService pool = Executors.newFixedThreadPool(numThreads);
+    List<Future<Mat>> futures = new ArrayList<>();
+
+    // Submit each frame as a separate processing task to the pool
+    for (Mat f : frames) {
+        futures.add(pool.submit(() -> {
+            Mat grayFrame = new Mat();
+            Imgproc.cvtColor(f, grayFrame, Imgproc.COLOR_BGR2GRAY);
+            return grayFrame;
+        }));
+    }
+    pool.shutdown();
+    
+    // Retrieve results as they complete and write to the output video
+    for (Future<Mat> fut : futures) {
+        try {
+            Mat processedFrame = fut.get(); // fut.get() waits for the task to finish
+            writer.write(processedFrame);
+        } catch (Exception e) { /* ... handle error ... */ }
+    }
+    writer.release();
+}
+                    </code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Code Deep Dive: Parallel Video with ExecutorService -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Code Deep Dive: Parallel Video</h2>
+                <ul class="space-y-5 text-xl text-slate-700 list-disc list-outside ml-6">
+                    <li><span class="font-semibold">Thread Pool Creation:</span> `Executors.newFixedThreadPool(numThreads)` creates a pool with a specific number of worker threads that will be reused for multiple tasks, which is more efficient than creating new threads for every frame.</li>
+                    <li><span class="font-semibold">Task Submission:</span> We loop through all frames and use `pool.submit()` to assign each frame's processing as a task to the thread pool. The code inside the lambda (`() -> { ... }`) is what each thread will execute.</li>
+                    <li><span class="font-semibold">The `Future` Object:</span> `pool.submit()` immediately returns a `Future<Mat>` object. This is a placeholder for a result that does not exist yet. We store these `Future` objects in a list.</li>
+                    <li><span class="font-semibold">Result Retrieval:</span> After submitting all tasks, we loop through the `futures` list. `fut.get()` is a blocking call; it waits until the specific task is complete and then returns the processed `Mat` frame. This ensures we retrieve and write the frames in the correct order.</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Slide 15: Test Methodology & Environment -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Test Methodology & Environment</h2>
+                <div class="text-xl text-slate-700 space-y-6">
+                    <p><span class="font-semibold">Hardware:</span> Intel Core i5-13th Gen CPU (12 Cores, 12 Threads).</p>
+                    <p><span class="font-semibold">Software:</span> Java SE Development Kit, Java Swing, OpenCV Library.</p>
+                    <p><span class="font-semibold">Test Media:</span> A high-resolution image (4096x4096 pixels) and a short, high-bitrate video clip (e.g., 10 seconds at 1080p) were used.</p>
+                    <div>
+                        <h3 class="font-semibold text-2xl mb-3 text-slate-800">Procedure:</h3>
+                        <ol class="list-decimal list-outside ml-8 space-y-3">
+                            <li>For each media type, the sequential method was run and the execution time was recorded.</li>
+                            <li>The parallel method was then run in a loop, creating a new `ForkJoinPool` (for images) or `ExecutorService` (for video) for each thread count from 1 to 12.</li>
+                            <li>Each parallel run was also executed 5 times to calculate a stable average time.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 16: Results & Performance Analysis -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Results & Performance Analysis</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-grow">
+                    <div class="placeholder h-full min-h-[300px] md:min-h-0">
+                        <img src="gui_2.jpg"/>
+                    </div>
+                    <div class="text-xl text-slate-700">
+                        <h3 class="font-semibold text-2xl mb-4 text-slate-800">Key Observations:</h3>
+                        <ul class="list-disc list-outside ml-6 space-y-3">
+                            <li><span class="font-semibold">Significant Speed-up:</span> Parallel implementations dramatically outperform sequential baselines for both image and video processing.</li>
+                            <li><span class="font-semibold">Point of Diminishing Returns:</span> The most significant gains occur when moving from 1 to 4 threads.</li>
+                            <li><span class="font-semibold">Performance Plateau:</span> After approximately 4-6 threads, the execution time curve flattens, showing that adding more threads yields little benefit. This trend holds for both the Fork/Join and ExecutorService strategies.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 17: Why Doesn't Performance Scale Linearly? -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Why Doesn't Performance Scale Linearly?</h2>
+                <ul class="space-y-6 text-xl text-slate-700 list-disc list-outside ml-6">
+                    <li><span class="font-semibold">Amdahl's Law:</span> The total speed-up is limited by the portion of the code that remains sequential (e.g., file I/O, thread pool creation).</li>
+                    <li><span class="font-semibold">Thread Management Overhead:</span> Creating, scheduling, and synchronizing threads is not a zero-cost operation. The overhead increases with the number of threads.</li>
+                    <li><span class="font-semibold">Resource Contention:</span> At high thread counts, all cores compete for shared resources like the memory bus and CPU caches. For video, there is also contention for disk I/O when writing the output file.</li>
+                    <li class="mt-4 pt-4 border-t border-slate-200"><span class="font-semibold text-slate-900">Conclusion:</span> The optimal number of threads is typically close to the number of *physical cores* on the CPU.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 18: Conclusion & Future Work -->
+        <section class="slide">
+            <div class="slide-container">
+                <h2 class="text-4xl font-bold mb-8 text-slate-900">Conclusion & Future Work</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div>
+                        <h3 class="text-3xl font-semibold mb-4 text-slate-800">Conclusion</h3>
+                        <ul class="list-disc list-outside ml-6 space-y-3 text-xl text-slate-700">
+                            <li><span class="font-semibold">Objectives Met:</span> Successfully developed and benchmarked parallel processing solutions for both images and video.</li>
+                            <li><span class="font-semibold">Key Finding:</span> Different parallelization strategies (Fork/Join for divisible tasks, ExecutorService for independent tasks) are highly effective for their respective problems.</li>
+                            <li><span class="font-semibold">Practical Impact:</span> This project proves that applying the correct parallel programming model is crucial for building high-performance media processing applications.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-semibold mb-4 text-slate-800">Future Work</h3>
+                        <ul id="future-work-list" class="list-disc list-outside ml-6 space-y-3 text-xl text-slate-700">
+                            <li><span class="font-semibold">GPU Acceleration:</span> Re-implement the processing logic using JOCL or a similar library to offload the work to a GPU.</li>
+                            <li><span class="font-semibold">Real-time Streaming:</span> Adapt the video framework to process frames from a live camera feed or network stream.</li>
+                            <li><span class="font-semibold">Hybrid Approach:</span> For video, combine both parallel strategies: use an ExecutorService to distribute frames, and within each task, use Fork/Join to process sections of that frame.</li>
+                        </ul>
+                        
+                    </div>
+                </div>
+                <div id="new-ideas-container" class="mt-8"></div>
+            </div>
+        </section>
+
+        <!-- Slide 19: Q&A -->
+        <section class="slide">
+            <div class="slide-container justify-center items-center text-center">
+                <h2 class="text-6xl font-bold text-slate-900">Thank You</h2>
+                <p class="mt-8 text-4xl text-slate-600">Questions?</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Navigation -->
+    <footer class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 z-10">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <button id="prev-btn" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-slate-300">
+                Previous
+            </button>
+            <div id="slide-counter" class="text-slate-600 font-medium">Slide 1 / 19</div>
+            <button id="next-btn" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-slate-300">
+                Next
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- SLIDE NAVIGATION ---
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const slideCounter = document.getElementById('slide-counter');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                slideCounter.textContent = `Slide ${index + 1} / ${totalSlides}`;
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === totalSlides - 1;
+                currentSlide = index;
+            }
+
+            prevBtn.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < totalSlides - 1) {
+                    showSlide(currentSlide + 1);
+                }
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') {
+                    nextBtn.click();
+                } else if (e.key === 'ArrowLeft') {
+                    prevBtn.click();
+                }
+            });
+
+            showSlide(0);
+
+            // --- GEMINI API INTEGRATION ---
+            const API_KEY = ""; // API key will be provided by the environment
+
+            // --- Future Work Idea Generator ---
+            const generateIdeasBtn = document.getElementById('generate-ideas-btn');
+            const newIdeasContainer = document.getElementById('new-ideas-container');
+
+            if (generateIdeasBtn) {
+                generateIdeasBtn.addEventListener('click', async () => {
+                    generateIdeasBtn.disabled = true;
+                    generateIdeasBtn.textContent = 'Generating... ✨';
+                    
+                    try {
+                        const prompt = "Based on a final year project about parallelizing image (with Fork/Join) and video (with ExecutorService) processing in Java, suggest 3 more creative and specific ideas for future work. The existing ideas are GPU Acceleration, Real-time Streaming, and a Hybrid Approach. Provide novel suggestions. Format the response as a simple list, with each item starting with a bolded title followed by a short explanation.";
+
+                        let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                        const payload = { contents: chatHistory };
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`API request failed with status ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+
+                        if (result.candidates && result.candidates.length > 0) {
+                            const text = result.candidates[0].content.parts[0].text;
+                            const ideas = text.split('\n').filter(line => line.trim() !== '');
+                            
+                            let ideasHtml = '<h4 class="text-2xl font-semibold mb-4 text-slate-800">✨ New Ideas from Gemini:</h4><div class="space-y-4">';
+                            ideas.forEach(idea => {
+                               const formattedIdea = idea
+                                    .replace(/^\*?\s*/, '')
+                                    .replace(/\*\*(.*?)\*\*/g, '<span class="font-semibold text-slate-800">$1</span>');
+                               ideasHtml += `<div class="p-4 bg-indigo-50 border border-indigo-200 rounded-lg text-lg">${formattedIdea}</div>`;
+                            });
+                            ideasHtml += '</div>';
+                            newIdeasContainer.innerHTML = ideasHtml;
+                            generateIdeasBtn.style.display = 'none'; // Hide button after use
+                        } else {
+                             throw new Error("No content received from API.");
+                        }
+
+                    } catch (error) {
+                        console.error("Error calling Gemini API:", error);
+                        newIdeasContainer.innerHTML = `<p class="text-red-500">Sorry, could not generate new ideas at this time.</p>`;
+                        generateIdeasBtn.disabled = false;
+                        generateIdeasBtn.textContent = 'Generate More Ideas ✨';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
