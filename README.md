@@ -57,15 +57,36 @@ ImageProcessing/
 ```
 
 ### 3. Placing Libraries
-- Copy `opencv-xxx.jar` and `opencv_javaxxx.dll` (or .so/.dylib) to `lib/`
-- Copy `vlcj-4.x.x.jar` to `lib/` (optional, for VLC video playback)
+**Note**: Large library files (>25MB) are not included in this repository due to GitHub's file size limits.
 
-### 4. Compiling
+**Download Required Libraries:**
+1. **OpenCV Java**: Download from https://opencv.org/releases/
+   - Extract `opencv-xxx.jar` and `opencv_javaxxx.dll` (Windows) or `.so` (Linux) or `.dylib` (Mac)
+   - Place both files in the `lib/` directory
+
+2. **VLCJ** (optional): Download from https://github.com/caprica/vlcj/releases/
+   - Extract `vlcj-4.x.x.jar` and place in `lib/` directory
+   - Install VLC Media Player from https://www.videolan.org/vlc/
+
+**File Structure After Download:**
+```
+lib/
+├── opencv-4120.jar          # ~800KB
+├── opencv_java4120.dll      # ~50MB (Windows)
+└── vlcj-4.8.2.jar          # ~400KB (optional)
+```
+
+### 4. Quick Setup (Optional)
+Run the setup script to download VLCJ automatically:
+- **Windows**: `setup_libraries.bat`
+- **Linux/Mac**: `./setup_libraries.sh`
+
+### 5. Compiling
 ```sh
 javac -cp "lib/*" src/*.java src/ParallelImageTasks/*.java
 ```
 
-### 5. Running
+### 6. Running
 ```sh
 java -Djava.library.path=lib -cp "lib/*;src" ImageProcessingApp
 ```
