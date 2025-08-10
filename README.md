@@ -130,8 +130,7 @@ java -Djava.library.path=lib -cp "lib/*;src" ImageProcessingApp
 ## Contributing
 Pull requests and suggestions are welcome! Please open an issue or submit a PR.
 
-## License
-[Specify your license here]
 
 ## Contact
 For questions or support, open an issue on GitHub.
+
